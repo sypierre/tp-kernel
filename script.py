@@ -43,10 +43,9 @@ print("done in %0.3fs" % (time() - t0))
 print("Predicting with SVC rbf on %d samples..." % X_test.shape[0])
 t1 = time()
 # TODO
-ypred=clf.predict(X_test)
+accuracy_kernel=clf.score(X_test,y_test)
 print("done in %0.3fs" % (time() - t1))
 timing_kernel = time() - t0
-accuracy_kernel=clf.score(X_test,y_test)
 print("classification accuracy: %0.3f" % accuracy_kernel)
 print 'timing_kernel: ',str(timing_kernel)
 
@@ -61,10 +60,9 @@ print("done in %0.3fs" % (time() - t0))
 print("Predicting with SVC linear on %d samples..." % X_test.shape[0])
 t1 = time()
 # TODO
-ypred=clf.predict(X_test)
+accuracy_kernel=clf.score(X_test,y_test)
 print("done in %0.3fs" % (time() - t1))
 timing_linear = time() - t0
-accuracy_kernel=clf.score(X_test,y_test)
 print("classification accuracy: %0.3f" % accuracy_kernel)
 print'timing_linear: ',str(timing_linear)
 ####################################################################
@@ -87,21 +85,19 @@ n_ranks = 100
 ranks = np.arange(1, n_ranks + 1)
 timing_fast = np.zeros(n_ranks)
 timing_slow = np.zeros(n_ranks)
-accuracy = np.zeros((n_ranks,2))
+accuracy = np.zeros(n_ranks)
 
 # TODO : Question 2 Implement rank_trunc function in source file.
 # TODO : Question 3 Evaluate accuracy with Frobenius norm as a function
 # of the rank for both svd solvers
 
 # Use linalg.norm(A, 'fro') to compute Frobenius norm of A
-ts=np.zeros((n_ranks,2))
-#t0=time()
 for k, rank in enumerate(ranks):
     tf=time()
-    gk=rank_trunc(gram_signal,rank)
+    gk,_,_=rank_trunc(gram_signal,rank)
     timing_fast[k]=time()-tf
     tsl=time()
-    gks=rank_trunc(gram_signal,rank,fast=False)
+    gks,_,_=rank_trunc(gram_signal,rank,fast=False)
     timing_slow[k]=time()-tsl
     accuracy[k]= linalg.norm(gram_signal-gk,ord='fro')/linalg.norm(gram_signal,ord='fro')
 #    accuracy[k]= linalg.norm(gram_signal-gks,ord='fro')/linalg.norm(gram_signal,ord='fro')
@@ -132,7 +128,7 @@ ax2.set_xlabel('Rank')
 ax2.set_ylabel('Accuracy')
 # plt.tight_layout()
 plt.draw()
-plt.savefig(opt['figroot']+'q23.png')
+plt.savefig(opt['figroot']+'q23-new.png')
 # plt.show()
 
 ####################################################################
@@ -157,17 +153,16 @@ print("Q5-train done in %0.3fs" % (time() - t0))
 print("Predicting with SVC rbf on %d samples..." % n_samples_test)
 t1 = time()
 # TODO
-clf.predict(Z_test)
+accuracy_kernel=clf.score(Z_test,y_test)
 print("done in %0.3fs" % (time() - t1))
 timing_q5 = time() - t0
-accuracy_kernel=clf.score(Z_test,y_test)
 print("classification accuracy: %0.3f" % accuracy_kernel)
 print'q5-training-testing time: ',str(timing_q5)
 
 ####################################################################
 # SVM Nystrom:
 
-# TODO : Question 6 Implement nystrom in source file.
+# TODO : Question 6-7 Implement nystrom in source file.
 
 Z_train, Z_test = nystrom(X_train, X_test, gamma, c=500, k=200, seed=44)
 
@@ -183,7 +178,6 @@ accuracy = clf.score(Z_test, y_test)
 print("done in %0.3fs" % (time() - t0))
 print("classification accuracy: %0.3f" % accuracy)
 
-
 ####################################################################
 # Results / comparisons:
 
@@ -196,13 +190,41 @@ accuracy_nystrom = np.zeros(n_ranks)
 accuracy_rkf = np.zeros(n_ranks)
 
 for i, c in enumerate(ranks):
-    # t0 = time()
-    # TODO Question 7
-    pass
+    print 'task-',str(i),'--- c=',str(c)
+    t0 = time()
+    # TODO Question 7/// 8 en fait
+    Z_train, Z_test = random_features(X_train, X_test, gamma, c=c, seed=44)
+    print 'shape of Ztrain: ', str(Z_train.shape)
+    clf = LinearSVC(dual=False)
+    clf.fit(Z_train, y_train)
+    accuracy_rkf[i] = clf.score(Z_test,y_test)
+    timing_rkf[i] = time() - t0
+    t1=time()
+    Z_trainn, Z_testn = nystrom(X_train, X_test, gamma, c=c,k=c-10, seed=44)
+    print 'shape of Ztrain_nystrom: ',str(Z_trainn.shape)
+    clf = LinearSVC(dual=False)
+    clf.fit(Z_trainn, y_train)
+    accuracy_nystrom[i] = clf.score(Z_testn,y_test)
+    timing_nystrom[i] = time() - t1
 
-    # accuracy_rkf[i] = ...
-    # timing_rkf[i] = time() - t0
+fig, axes = plt.subplots(ncols=1, nrows=2)
+ax1, ax2 = axes.ravel()
 
+ax1.plot(ranks, timing_rkf, 'o-')
+ax1.plot(ranks, timing_nystrom, '*-')
+
+ax1.set_xlabel('c')
+ax1.set_ylabel('Time')
+ax1.legend(['SVM with RKF','SVM with Nystrom'],loc=2)
+ax2.plot(ranks, accuracy_rkf, 'o-')
+ax2.plot(ranks,accuracy_nystrom,'*-')
+
+ax2.set_xlabel('Rank')
+ax2.set_ylabel('Accuracy')
+# plt.tight_layout()
+plt.draw()
+plt.savefig(opt['figroot']+'q8-new.png')
+# plt.show()
 
 ####################################################################
 # Display bis
