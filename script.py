@@ -155,9 +155,8 @@ t1 = time()
 # TODO
 accuracy_kernel=clf.score(Z_test,y_test)
 print("done in %0.3fs" % (time() - t1))
-timing_q5 = time() - t0
 print("classification accuracy: %0.3f" % accuracy_kernel)
-print'q5-training-testing time: ',str(timing_q5)
+print'Q5-training-testing time: ',str(time() - t0)
 
 ####################################################################
 # SVM Nystrom:
@@ -170,13 +169,14 @@ print("Fitting SVC linear on %d samples..." % n_samples)
 t0 = time()
 clf = LinearSVC(dual=False)
 clf.fit(Z_train, y_train)
-print("done in %0.3fs" % (time() - t0))
+print("fit done in %0.3fs" % (time() - t0))
 
 print("Predicting with SVC linear on %d samples..." % n_samples_test)
-t0 = time()
+t1 = time()
 accuracy = clf.score(Z_test, y_test)
-print("done in %0.3fs" % (time() - t0))
+print("pred done in %0.3fs" % (time() - t1))
 print("classification accuracy: %0.3f" % accuracy)
+print'Q7-training-testing time: ',str(time() - t0)
 
 ####################################################################
 # Results / comparisons:
