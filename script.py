@@ -68,7 +68,7 @@ print'timing_linear: ',str(timing_linear)
 ####################################################################
 # Gram approximation
 from TP_kernel_approx_source import rank_trunc, nystrom, random_features
-
+# import TP_kernel_approx_source
 p = 200
 r_noise = 100
 r_signal = 20
@@ -94,14 +94,13 @@ accuracy = np.zeros(n_ranks)
 # Use linalg.norm(A, 'fro') to compute Frobenius norm of A
 for k, rank in enumerate(ranks):
     tf=time()
-    gk,_,_=rank_trunc(gram_signal,rank)
+    gk,_,_ = rank_trunc(gram_signal,rank)
     timing_fast[k]=time()-tf
     tsl=time()
-    gks,_,_=rank_trunc(gram_signal,rank,fast=False)
+    gks,_,_ = rank_trunc(gram_signal,rank,fast=False)
     timing_slow[k]=time()-tsl
     accuracy[k]= linalg.norm(gram_signal-gk,ord='fro')/linalg.norm(gram_signal,ord='fro')
 #    accuracy[k]= linalg.norm(gram_signal-gks,ord='fro')/linalg.norm(gram_signal,ord='fro')
-
 print("done q23")
 #plt.plot(accuracy,'o-')
 #plt.title('Accuracy of approximasion by truncated SVD as a function of rank')
@@ -114,15 +113,16 @@ print("done q23")
 # Display
 opt={'figroot':'report/figs/'}
 
+plt.close('all')
 fig, axes = plt.subplots(ncols=1, nrows=2)
 ax1, ax2 = axes.ravel()
 
-ax1.plot(ranks, timing_fast, '-')
-ax1.plot(ranks, timing_slow, '-')
+linef, = ax1.plot(ranks, timing_fast, '-')
+lines, = ax1.plot(ranks, timing_slow, '-')
 
 ax1.set_xlabel('Rank')
 ax1.set_ylabel('Time')
-ax1.legend({'timing fast','timing slow'},loc=2)
+ax1.legend({linef,lines},{'timing fast','timing slow'},loc=2)
 ax2.plot(ranks, accuracy, '-')
 ax2.set_xlabel('Rank')
 ax2.set_ylabel('Accuracy')
